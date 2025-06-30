@@ -15,11 +15,11 @@
           <h2 class="login-title">用户登录</h2>
           <form @submit.prevent="handleLogin" class="login-form">
             <div class="form-row">
-              <span class="input-label">用户名：</span>
+              <span class="input-label">学号：</span>
               <input 
                 type="text" 
-                v-model="username" 
-                placeholder="请输入用户名"
+                v-model="studentId" 
+                placeholder="请输入学号"
                 required
                 class="form-input"
               >
@@ -34,7 +34,9 @@
                 class="form-input"
               >
             </div>
-            <button type="submit" class="login-btn">登录</button>
+            <button type="submit" class="login-btn" :disabled="loading">
+              {{ loading ? '登录中...' : '登录' }}
+            </button>
             <div class="remember-row">
               <label class="remember-me">
                 <input type="checkbox"> 记住密码
@@ -45,69 +47,119 @@
       </div>
     </div>
   </div>
+ 
+  <!-- 添加提示框 -->
+  <div v-if="showErrorModal" class="error-modal">
+    <div class="modal-content">
+      <span class="close" @click="showErrorModal = false">&times;</span>
+      <p>{{ errorMessage }}</p>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
-
-const username = ref('')
+const studentId = ref('')
 const password = ref('')
+const showErrorModal = ref(false)
+const errorMessage = ref('')
+const loading = ref(false)
 const router = useRouter()
 
-const handleLogin = () => {
-  console.log('登录信息:', username.value, password.value)
-  localStorage.setItem('isAuthenticated', 'true')
-  router.push('/home')
+
+const handleLogin = async () => {
+  loading.value = true
+  
+  try {
+    const response = await axios.post('http://10.242.33.86:8081/api/login', {
+      studentId: studentId.value,
+      password: password.value
+    })
+
+    console.log('API Response:', response.data) // 添加调试日志
+
+    if (response.data.code === 200) {
+      // 确保这里的结构与API返回的结构一致
+      const token = response.data.token || response.data.data?.token
+      const userData = response.data.data || {}
+      
+      if (!token) {
+        throw new Error('Token not found in response')
+      }
+
+      // 存储token和用户信息
+      localStorage.setItem('token', token)
+      localStorage.setItem('userInfo', JSON.stringify(userData))
+      
+      // 设置axios全局授权头
+      axios.defaults.headers.common['Authorization'] = token
+      
+      // 添加跳转前的日志
+      console.log('Login successful, redirecting to /home')
+      
+      // 跳转到首页
+      router.push('/home').catch(err => {
+        console.error('Router push error:', err)
+      })
+    } else {
+      errorMessage.value = response.data.message || '登录失败'
+      showErrorModal.value = true
+    }
+  } catch (error) {
+    console.error('Login error:', error)
+    if (error.response) {
+      errorMessage.value = error.response.data?.message || '登录失败'
+    } else {
+      errorMessage.value = error.message || '网络错误，请稍后重试'
+    }
+    showErrorModal.value = true
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <style scoped>
+/* 保持原有样式不变 */
 .white-edge {
   position: fixed;
   left: 0;
   top: 0;
-  width: 3.8cm; /* 1厘米宽 */
-  height: 100vh; /* 与视口同高 */
+  width: 3.8cm;
+  height: 100vh;
   background:  linear-gradient(135deg,rgb(87, 156, 216),rgb(138, 178, 227));
-  
 }
-
-
 
 .login-page {
   display: flex;
   min-height: 100vh;
   background: linear-gradient(135deg, #1976d2, #2196f3);
-  padding-top: 40px; /* 调整整体下移距离 */
-   padding-left: 1cm; /* 添加这行来创建左边距 */
- 
+  padding-top: 40px;
+  padding-left: 1cm;
 }
 
 .platform-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* 改为flex-start使内容上移 */
+  justify-content: flex-start;
   align-items: center;
   color: white;
   padding: 2rem;
-  padding-top: 4rem; /* 减少顶部内边距使内容更高 */
-   margin-left: 1cm; /* 添加这行来创建左边距 */
-  position: relative; /* 确保边距不会影响其他布局 */
+  padding-top: 4rem;
+  margin-left: 1cm;
+  position: relative;
 }
 
 .platform-name {
-   
   font-size: 3.2rem;
   font-weight: bold;
   margin-bottom: 0.8rem;
   text-shadow: 0 2px 4px rgba(8, 5, 5, 0.1);
   letter-spacing: 0.3rem;
-
-  
-
 }
 
 @keyframes float {
@@ -116,8 +168,8 @@ const handleLogin = () => {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
   50% {
-    transform: translateY(-17px);  /* 浮动幅度增大到15px */
-    text-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* 阴影效果增强 */
+    transform: translateY(-17px);
+    text-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
   }
   100% {
     transform: translateY(0);
@@ -125,15 +177,11 @@ const handleLogin = () => {
   }
 }
 
-
 .platform-slogan {
   font-size: 1.3rem;
   opacity: 0.9;
-  margin-bottom: 1.5rem; /* 增加下边距为图标留空间 */
- 
- 
+  margin-bottom: 1.5rem;
 }
-
 
 .login-wrapper {
   width: 450px;
@@ -143,8 +191,6 @@ const handleLogin = () => {
   margin-left: -30px;
 }
 
-
-
 .login-border {
   width: 100%;
   padding: 10px;
@@ -152,13 +198,13 @@ const handleLogin = () => {
   border-radius: 5px;
   backdrop-filter: blur(5px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease; /* 添加过渡效果 */
-  transform: scale(1); /* 初始大小 */
+  transition: all 0.3s ease;
+  transform: scale(1);
 }
 
 .login-border:hover {
-  transform: scale(1.02); /* 悬停时轻微放大 */
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15); /* 同时增强阴影效果 */
+  transform: scale(1.02);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
 .login-container {
@@ -167,10 +213,8 @@ const handleLogin = () => {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease; /* 容器也添加过渡效果 */
+  transition: all 0.3s ease;
 }
-
-
 
 .login-title {
   font-size: 1.2rem;
@@ -206,7 +250,7 @@ const handleLogin = () => {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 0.85rem;
-   height: 36px;        
+  height: 36px;        
   min-width: 0;
 }
 
@@ -251,22 +295,67 @@ const handleLogin = () => {
   background: #1a80d6;
 }
 
+.login-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
 .login-icon-container {
-  margin-top: 1.5rem; /* 调整与标语的距离 */
+  margin-top: 1.5rem;
   text-align: center;
 }
 
 .login-icon {
-  width: 420px; /* 调整图标大小 */
+  width: 420px;
   height:420px;
- 
   opacity: 0.9;
   transition: all 0.3s ease;
   animation: float 2.3s ease-in-out infinite;
-   animation-delay: 0s; /* 标题立即开始 */
+  animation-delay: 0s;
 }
 
+.error-modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
+.modal-content {
+  background-color: #fefefe;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  text-align: center;
+}
+
+.modal-content p {
+  margin: 15px 0;
+  color: #f44336;
+  font-size: 16px;
+}
+
+.close {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  color: #aaa;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #333;
+}
 
 @media (max-width: 768px) {
   .login-page {
