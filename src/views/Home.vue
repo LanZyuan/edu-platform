@@ -132,7 +132,7 @@ const goToNews = (id) => {
 /* 平台名称模块 - 修改为横幅样式 */
 .platform-banner {
   height: 280px;
-  background: linear-gradient(135deg,rgb(44, 130, 217),rgb(83, 73, 219));
+  background: linear-gradient(135deg,rgb(49, 125, 201),rgb(85, 73, 215));
   display: flex;
   align-items: center;
   justify-content: center;
