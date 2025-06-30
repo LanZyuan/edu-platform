@@ -1,47 +1,47 @@
 <template>
   <div class="login-page">
+    <div class="white-edge"></div>
     <div class="platform-info">
       <h1 class="platform-name">EduPlatform</h1>
       <p class="platform-slogan">智慧教育 · 未来学习</p>
-      <div class="education-icons">
-        <i class="fas fa-book-open"></i>
-        <i class="fas fa-graduation-cap"></i>
-        <i class="fas fa-laptop-code"></i>
-        <i class="fas fa-atom"></i>
+      <div class="login-icon-container">
+        <img src="@/assets/icons/login.svg" alt="Login Icon" class="login-icon">
       </div>
     </div>
     
     <div class="login-wrapper">
-      <div class="login-container">
-        <h2 class="login-title">用户登录</h2>
-        <form @submit.prevent="handleLogin" class="login-form">
-          <div class="form-row">
-            <span class="input-label">用户名：</span>
-            <input 
-              type="text" 
-              v-model="username" 
-              placeholder="请输入用户名"
-              required
-              class="form-input"
-            >
-          </div>
-          <div class="form-row">
-            <span class="input-label">密码：</span>
-            <input 
-              type="password" 
-              v-model="password" 
-              placeholder="请输入密码"
-              required
-              class="form-input"
-            >
-          </div>
-          <div class="remember-row">
-            <label class="remember-me">
-              <input type="checkbox"> 记住密码
-            </label>
-          </div>
-          <button type="submit" class="login-btn">登录</button>
-        </form>
+      <div class="login-border">
+        <div class="login-container">
+          <h2 class="login-title">用户登录</h2>
+          <form @submit.prevent="handleLogin" class="login-form">
+            <div class="form-row">
+              <span class="input-label">用户名：</span>
+              <input 
+                type="text" 
+                v-model="username" 
+                placeholder="请输入用户名"
+                required
+                class="form-input"
+              >
+            </div>
+            <div class="form-row">
+              <span class="input-label">密码：</span>
+              <input 
+                type="password" 
+                v-model="password" 
+                placeholder="请输入密码"
+                required
+                class="form-input"
+              >
+            </div>
+            <button type="submit" class="login-btn">登录</button>
+            <div class="remember-row">
+              <label class="remember-me">
+                <input type="checkbox"> 记住密码
+              </label>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -50,6 +50,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+
 
 const username = ref('')
 const password = ref('')
@@ -63,11 +64,25 @@ const handleLogin = () => {
 </script>
 
 <style scoped>
+.white-edge {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 3.8cm; /* 1厘米宽 */
+  height: 100vh; /* 与视口同高 */
+  background:  linear-gradient(135deg,rgb(87, 156, 216),rgb(138, 178, 227));
+  
+}
+
+
+
 .login-page {
   display: flex;
   min-height: 100vh;
   background: linear-gradient(135deg, #1976d2, #2196f3);
   padding-top: 40px; /* 调整整体下移距离 */
+   padding-left: 1cm; /* 添加这行来创建左边距 */
+ 
 }
 
 .platform-info {
@@ -78,53 +93,72 @@ const handleLogin = () => {
   align-items: center;
   color: white;
   padding: 2rem;
-  padding-top: 1rem; /* 减少顶部内边距使内容更高 */
+  padding-top: 4rem; /* 减少顶部内边距使内容更高 */
+   margin-left: 1cm; /* 添加这行来创建左边距 */
+  position: relative; /* 确保边距不会影响其他布局 */
 }
 
 .platform-name {
-  font-size: 2.8rem;
+   
+  font-size: 3.2rem;
   font-weight: bold;
-  margin-bottom: 0.8rem; /* 减小下边距 */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  margin-bottom: 0.8rem;
+  text-shadow: 0 2px 4px rgba(8, 5, 5, 0.1);
+  letter-spacing: 0.3rem;
 
-.platform-slogan {
-  font-size: 1.4rem;
-  opacity: 0.9;
-  margin-bottom: 1.5rem; /* 增加下边距为图标留空间 */
-}
+  
 
-/* 新增教育图标样式 */
-.education-icons {
-  display: flex;
-  justify-content: center;
-  gap: 30px; /* 图标间距 */
-  margin-top: 1rem;
-  font-size: 2rem;
-  color: rgba(255, 255, 255, 0.7);
-  animation: float 3s ease-in-out infinite;
-}
-
-.education-icons i {
-  animation: float 3s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.2s);
 }
 
 @keyframes float {
-  0%, 100% {
+  0% {
     transform: translateY(0);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-17px);  /* 浮动幅度增大到15px */
+    text-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); /* 阴影效果增强 */
+  }
+  100% {
+    transform: translateY(0);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 }
 
+
+.platform-slogan {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  margin-bottom: 1.5rem; /* 增加下边距为图标留空间 */
+ 
+ 
+}
+
+
 .login-wrapper {
-  width: 500px;
+  width: 450px;
   display: flex;
   align-items: center;
   padding-right: 10%;
   margin-left: -30px;
+}
+
+
+
+.login-border {
+  width: 100%;
+  padding: 10px;
+  background-color: rgba(192, 217, 232, 0.5);
+  border-radius: 5px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease; /* 添加过渡效果 */
+  transform: scale(1); /* 初始大小 */
+}
+
+.login-border:hover {
+  transform: scale(1.02); /* 悬停时轻微放大 */
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15); /* 同时增强阴影效果 */
 }
 
 .login-container {
@@ -133,10 +167,13 @@ const handleLogin = () => {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease; /* 容器也添加过渡效果 */
 }
 
+
+
 .login-title {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: #333;
   margin-bottom: 1.5rem;
   text-align: center;
@@ -158,7 +195,7 @@ const handleLogin = () => {
   display: inline-block;
   width: auto;
   color: #666;
-  font-size: 1rem;
+  font-size: 0.9rem;
   margin-right: 12px;
   line-height: 1.5;
 }
@@ -168,7 +205,8 @@ const handleLogin = () => {
   padding: 0.8rem 1rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 0.85rem;
+   height: 36px;        
   min-width: 0;
 }
 
@@ -179,7 +217,7 @@ const handleLogin = () => {
 }
 
 .remember-row {
-  margin: 1.5rem 0;
+  margin: 1.2rem 0;
 }
 
 .remember-me {
@@ -198,12 +236,12 @@ const handleLogin = () => {
 
 .login-btn {
   width: 100%;
-  padding: 0.9rem;
+  padding: 0.5rem;
   background: #2196f3;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
@@ -212,6 +250,23 @@ const handleLogin = () => {
 .login-btn:hover {
   background: #1a80d6;
 }
+
+.login-icon-container {
+  margin-top: 1.5rem; /* 调整与标语的距离 */
+  text-align: center;
+}
+
+.login-icon {
+  width: 420px; /* 调整图标大小 */
+  height:420px;
+ 
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  animation: float 2.3s ease-in-out infinite;
+   animation-delay: 0s; /* 标题立即开始 */
+}
+
+
 
 @media (max-width: 768px) {
   .login-page {
