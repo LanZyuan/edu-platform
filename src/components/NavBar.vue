@@ -14,7 +14,7 @@
           :class="{ active: activeButton === button.route }"
         >
           {{ button.name }}
-          <img src="@/assets/icons/th.svg" class="dropdown-icon" alt="下拉菜单">
+          <img src="@/assets/icons/arrow-down.svg" class="dropdown-icon" alt="下拉菜单">
         </button>
         
         <!-- 下拉菜单 -->
@@ -39,9 +39,24 @@
     <!-- 中间搜索框 -->
     <div class="search-container">
       <div class="search-box">
+        <!-- 搜索类型选择 -->
+        <div class="search-select" 
+             @mouseenter="showSearchDropdown"
+             @mouseleave="hideSearchDropdown">
+          <button class="search-type-button">
+            {{ searchType === 'courses' ? '课程' : '资讯' }}
+            <img src="@/assets/icons/arrow-down.svg" class="dropdown-icon" alt="下拉">
+          </button>
+          
+          <div v-if="showSearchTypeDropdown" class="dropdown-menu search-type-dropdown">
+            <div class="dropdown-item" @click="setSearchType('courses')">课程</div>
+            <div class="dropdown-item" @click="setSearchType('news')">资讯</div>
+          </div>
+        </div>
+        
         <input 
           type="text" 
-          placeholder="搜索课程、资讯..." 
+          :placeholder="searchPlaceholder"
           class="search-input"
           v-model="searchQuery"
           @keyup.enter="handleSearch"
@@ -52,26 +67,36 @@
       </div>
     </div>
 
-       <!-- 右侧用户信息 -->
-    <div class="user-info" @click="toggleDropdown">
-      <img :src="user.avatar" alt="用户头像" class="avatar">
-      <span class="username">{{ user.name }}</span>
+    <!-- 右侧用户信息 -->
+   <div class="user-info-container"
+         @mouseenter="handleUserDropdown(true)"
+         @mouseleave="handleUserDropdown(false)">
+      <div class="user-info">
+        <img :src="user.avatar" alt="用户头像" class="avatar">
+        <span class="username">{{ user.name }}</span>
+        <img src="@/assets/icons/arrow-down.svg" class="dropdown-icon" alt="下拉">
+      </div>
       
       <!-- 用户下拉菜单 -->
-      <div v-if="showUserDropdown" class="dropdown-menu">
-        <div class="dropdown-item" @click="goToProfile">
-          个人中心
+      <transition name="dropdown">
+        <div v-if="showUserDropdown" 
+             class="dropdown-menu user-dropdown"
+             @mouseenter="cancelHideTimeout"
+             @mouseleave="startHideTimeout">
+          <div class="dropdown-item" @click="goToProfile">
+            个人中心
+          </div>
+          <div class="dropdown-item" @click="handleLogout">
+            退出登录
+          </div>
         </div>
-        <div class="dropdown-item" @click="handleLogout">
-          退出登录
-        </div>
-      </div>
+      </transition>
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -79,7 +104,14 @@ const showUserDropdown = ref(false)
 const activeDropdown = ref(null)
 const activeButton = ref(null)
 const searchQuery = ref('')
+const searchType = ref('courses') // 默认搜索课程
+const showSearchTypeDropdown = ref(false)
 let hideTimeout = null
+
+// 计算属性：根据搜索类型返回不同的placeholder
+const searchPlaceholder = computed(() => {
+  return searchType.value === 'courses' ? '搜索课程...' : '搜索资讯...'
+})
 
 // 模拟用户数据
 const user = reactive({
@@ -117,7 +149,7 @@ const dropdownItems = {
 // 搜索处理
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.push(`/search?q=${encodeURIComponent(searchQuery.value)}`)
+    router.push(`/search?type=${searchType.value}&q=${encodeURIComponent(searchQuery.value)}`)
     searchQuery.value = ''
   }
 }
@@ -142,6 +174,32 @@ const hideDropdown = (route) => {
   }, 300)
 }
 
+// 显示搜索类型下拉菜单
+const showSearchDropdown = () => {
+  clearTimeout(hideTimeout)
+  showSearchTypeDropdown.value = true
+}
+
+// 隐藏搜索类型下拉菜单
+const hideSearchDropdown = () => {
+  hideTimeout = setTimeout(() => {
+    showSearchTypeDropdown.value = false
+  }, 350)
+}
+
+// 隐藏用户下拉菜单
+const hideUserDropdown = () => {
+  hideTimeout = setTimeout(() => {
+    showUserDropdown.value = false
+  }, 300)
+}
+
+// 设置搜索类型
+const setSearchType = (type) => {
+  searchType.value = type
+  showSearchTypeDropdown.value = false
+}
+
 // 导航到指定路由
 const navigateTo = (route) => {
   activeButton.value = route
@@ -152,11 +210,6 @@ const navigateTo = (route) => {
 const navigateToSub = (route) => {
   router.push(route)
   activeDropdown.value = null
-}
-
-// 切换用户下拉菜单显示状态
-const toggleDropdown = () => {
-  showUserDropdown.value = !showUserDropdown.value
 }
 
 // 跳转到个人信息页
@@ -170,6 +223,22 @@ const handleLogout = () => {
   localStorage.removeItem('isAuthenticated')
   router.push('/login')
 }
+
+const handleUserDropdown = (show) => {
+  clearTimeout(hideTimeout)
+  showUserDropdown.value = show
+}
+
+const startHideTimeout = () => {
+  hideTimeout = setTimeout(() => {
+    showUserDropdown.value = false
+  }, 300)
+}
+
+const cancelHideTimeout = () => {
+  clearTimeout(hideTimeout)
+}
+
 </script>
 
 <style scoped>
@@ -217,8 +286,6 @@ button:hover {
   background:rgb(230, 239, 253);
 }
 
-
-
 .dropdown-icon {
   width: 16px;
   height: 16px;
@@ -226,7 +293,8 @@ button:hover {
   transition: transform 0.2s;
 }
 
-.nav-item:hover .dropdown-icon {
+.nav-item:hover .dropdown-icon,
+.user-info:hover .dropdown-icon {
   opacity: 1;
   transform: rotate(180deg);
 }
@@ -241,23 +309,62 @@ button:hover {
 .search-box {
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: 400px;
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.search-select {
+  position: relative;
+  height: 100%;
+  margin-right: -1px;
+}
+
+.search-type-button {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1.4px solid rgb(162, 159, 159);
+  border-radius: 20px 0 0 20px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  height: 36px;
+  outline: none;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgb(226, 227, 229);
+}
+
+.search-type-button:hover {
+  background: rgb(230, 239, 253);
+  border-color: rgb(66, 121, 185);
+}
+
+.search-type-dropdown {
+  left: 0;
+  width: 100%;
+  min-width: 120px;
 }
 
 .search-input {
-  width: 100%;
+  flex: 1;
   padding: 8px 40px 8px 15px;
-  border: 1.4px solid #b0b0b0; /* 进一步加深边框颜色 */
-  border-radius: 20px;
+  border: 1.4px solid #b0b0b0;
+  border-left: none;
+  border-radius: 0 20px 20px 0;
   font-size: 14px;
   transition: all 0.3s;
   outline: none;
+  height: 36px;
+  box-sizing: border-box;
 }
 
 .search-input:hover {
-  border-color:rgb(66, 121, 185);
-  box-shadow: 0 0 0 2px rgba(81, 135, 211, 0.46);
+  border-color: rgb(66, 121, 185);
+  box-shadow: 0 0 0 2px rgba(81, 135, 211, 0.2);
 }
 
 .search-button {
@@ -283,28 +390,41 @@ button:hover {
 }
 
 /* 用户信息样式 */
+.user-info-container {
+  position: relative;
+  height: 100%;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+Z
+
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 18px;
   cursor: pointer;
-  padding: 5px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
-  transition: background 0.3s;
+  transition: all 0.3s;
   position: relative;
   height: 100%;
+  min-width: 150px;
 }
 
 .user-info:hover {
-  background: #f5f7fa;
+  background: rgb(230, 239, 253);
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #f0f0f0;
+   margin-right: 15px;
+   
 }
 
 .username {
@@ -317,20 +437,20 @@ button:hover {
 .dropdown-menu {
   position: absolute;
   top: 100%;
-  left: 0;
   background: white;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  min-width: 160px;
+  min-width: 130px;
   z-index: 1000;
-  margin-top: 5px;
+  margin-top: 8px;
   overflow: hidden;
- 
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .user-dropdown {
   right: 0;
   left: auto;
+  width: 100%;
 }
 
 .dropdown-item {
@@ -344,15 +464,7 @@ button:hover {
 }
 
 .dropdown-item:hover {
-  background:rgb(206, 221, 243);
-  color:rgb(66, 121, 185);
+  background: rgb(206, 221, 243);
+  color: rgb(66, 121, 185);
 }
-
-.dropdown-item .dropdown-icon {
-  width: 14px;
-  height: 14px;
-  opacity: 0.8;
-}
-
-
 </style>
